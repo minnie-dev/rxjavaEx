@@ -26,7 +26,7 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        concatMapRxJava();
+        zipRxJava();
     }
 
     private void createObservable() {
@@ -115,6 +115,56 @@ public class MainActivity extends AppCompatActivity {
                 .reduce((ball1, ball2) -> ball2 + "(" + ball1 + ")")
                 .subscribe(System.out::println);
     }
+
+    private void scanRxJava(){
+        String[] balls = new String[] {"A", "B", "C"};
+        Observable.fromArray(balls)
+                .scan((ball1, ball2)-> ball2 + "("+ball1+")")
+                .subscribe(System.out::println);
+    }
+
+    private void filterRxJava(){
+        Integer[] nums = {10,15,76,38,29};
+
+        Observable.fromArray(nums)
+                .filter(num->num%2==0)
+                .subscribe(System.out::println);
+    }
+
+    private void otherFilter(){
+        Integer[] nums= {100,200,300,400,500};
+        Single<Integer> single;
+        Observable<Integer> source;
+
+        single = Observable.fromArray(nums).first(-1);
+        single.subscribe(data -> System.out.println("first() value = "+data));
+
+        single = Observable.fromArray(nums).last(999);
+        single.subscribe(data -> System.out.println("last() value = "+data));
+
+        source = Observable.fromArray(nums).take(3);
+        source.subscribe(data -> System.out.println("take() value = "+data));
+
+        source = Observable.fromArray(nums).takeLast(3);
+        source.subscribe(data -> System.out.println("takeLast() value = "+data));
+
+        source = Observable.fromArray(nums).skip(2);
+        source.subscribe(data -> System.out.println("skip() value = "+data));
+
+        source = Observable.fromArray(nums).skipLast(2);
+        source.subscribe(data -> System.out.println("skipLast() value = "+data));
+
+    }
+
+    private void zipRxJava(){
+        Observable<Integer> source = Observable.zip(
+                Observable.just(100, 200, 300),
+                Observable.just(10, 20, 30),
+                Observable.just(1, 2, 3),
+                (a, b, c) -> a + b + c );
+        source.subscribe(System.out::println);
+    }
+
 
     private void coldObservable() {
         Observable<Long> src = Observable.interval(1, TimeUnit.SECONDS);
