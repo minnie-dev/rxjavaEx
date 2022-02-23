@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
@@ -26,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        zipRxJava();
+        otherFilter();
     }
 
     private void createObservable() {
@@ -143,17 +144,16 @@ public class MainActivity extends AppCompatActivity {
         single.subscribe(data -> System.out.println("last() value = "+data));
 
         source = Observable.fromArray(nums).take(3);
-        source.subscribe(data -> System.out.println("take() value = "+data));
+        source.subscribe(data -> System.out.println("take(3) value = "+data));
 
         source = Observable.fromArray(nums).takeLast(3);
-        source.subscribe(data -> System.out.println("takeLast() value = "+data));
+        source.subscribe(data -> System.out.println("takeLast(3) value = "+data));
 
         source = Observable.fromArray(nums).skip(2);
-        source.subscribe(data -> System.out.println("skip() value = "+data));
+        source.subscribe(data -> System.out.println("skip(2) value = "+data));
 
         source = Observable.fromArray(nums).skipLast(2);
-        source.subscribe(data -> System.out.println("skipLast() value = "+data));
-
+        source.subscribe(data -> System.out.println("skipLast(2) value = "+data));
     }
 
     private void zipRxJava(){
@@ -163,7 +163,15 @@ public class MainActivity extends AppCompatActivity {
                 Observable.just(1, 2, 3),
                 (a, b, c) -> a + b + c );
         source.subscribe(System.out::println);
+
+
+
+        Observable.just(100, 200, 300).zipWith(
+                Observable.just(10, 20, 30),
+                (a, b) -> a + b
+        ).subscribe(System.out::println);
     }
+
 
 
     private void coldObservable() {
