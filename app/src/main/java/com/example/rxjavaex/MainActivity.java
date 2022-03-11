@@ -6,15 +6,26 @@ import android.os.Bundle;
 
 import com.example.rxjavaex.databinding.ActivityMainBinding;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
+import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.CompletableEmitter;
+import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.core.SingleEmitter;
+import io.reactivex.rxjava3.core.SingleOnSubscribe;
 import io.reactivex.rxjava3.observables.ConnectableObservable;
+import io.reactivex.rxjava3.observers.DisposableMaybeObserver;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.reactivex.rxjava3.subjects.PublishSubject;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -26,8 +37,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        deferObservable();
 
-        otherFilter();
+
     }
 
     private void createObservable() {
@@ -44,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private void justObservable() {
         Observable<String> source = Observable.just("Hello", "Hi");
         source.subscribe(System.out::println);
+
     }
 
     private void fromArrayObservable() {
@@ -71,9 +84,96 @@ public class MainActivity extends AppCompatActivity {
         source.subscribe(System.out::println); //블로킹되어 기다림
     }
 
-    private void singleObservable() {
-        Single.create(emitter -> emitter.onSuccess("Hello")).subscribe(System.out::println);
+    private void rangeObservable(){
+        Observable.range(10,3)
+                .subscribe(System.out::println);
     }
+
+
+    private void singleObservable() {
+        //Single.create(emitter -> emitter.onSuccess("Hello")).subscribe(System.out::println);
+        // Single.just()
+        Single.just("Single Test - Single.just()")
+                .subscribe(System.out::println);
+
+        // Single.create()
+        Single.create(emitter -> emitter.onSuccess("Single Test - Single.create()"))
+            .subscribe(System.out::println);
+    }
+
+    private void maybeObservable(){
+        Maybe.empty()
+                .subscribeWith(new DisposableMaybeObserver<Object>() {
+                    @Override
+                    public void onSuccess(@NonNull Object o) {
+                        System.out.println("onSuccess");
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+                        e.printStackTrace();
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        System.out.println("onComplete : Null");
+                    }
+                });
+    }
+
+    private void completableObservable(){
+        Completable.create(CompletableEmitter::onComplete).subscribe(()->System.out.println("Completable Test >>> completed 1"));
+    }
+
+    private void intervalObservable(){
+        Observable.interval(1000L, TimeUnit.MILLISECONDS)
+                .map(data -> (data + 1) * 100)
+                .take(5)
+                .subscribe(System.out::println);
+    }
+
+    private void timerObservable(){
+        Observable.timer(10,TimeUnit.SECONDS)
+                .map(data -> (data + 1) * 100)
+                .take(5)
+                .subscribe(System.out::println);
+    }
+
+    private void rangeObservable1() {
+        Observable.range(1, 10)
+                //.filter(num -> num % 2 == 0)
+                .subscribe(it -> System.out.println(it));
+
+    }
+
+    private void deferObservable(){
+        String timeFormat = (new SimpleDateFormat("mm:ss.SSS", Locale.KOREA).format(System.currentTimeMillis()));
+
+        System.out.println("[1] : "+timeFormat);
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("[2] : "+timeFormat);
+        System.out.println("===================================");
+
+        Observable.just(timeFormat)
+                .subscribe(System.out::println);
+
+        Observable.defer(()->Observable.just(timeFormat))
+                .subscribe(System.out::println);
+
+    }
+
+    private void repeatObservable(){
+        Observable.fromArray("1","2","3")
+                .repeat(3)
+                .subscribe(System.out::println);
+
+    }
+
+
 
     private void mapRxJava(){
         String[] numArr = new String[]{"1","2","3"};
@@ -89,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
                         .take(2)
                         .map(val -> "data: " + data + " value: " + val))
                 .subscribe(System.out::println);
+
     }
 
     private void concatMapRxJava(){
@@ -226,5 +327,40 @@ public class MainActivity extends AppCompatActivity {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public void imperativeProgramming() {
+        ArrayList<Integer> items = new ArrayList<>();
+        items.add(1);
+        items.add(2);
+        items.add(3);
+        items.add(4);
+
+        for (Integer item : items) {
+            if (item % 2 == 0) {
+                System.out.println(item);
+            }
+        }
+
+        items.add(5);
+        items.add(6);
+        items.add(7);
+        items.add(8);
+    }
+
+    public void reactiveProgramming() {
+        PublishSubject<Integer> items = PublishSubject.create();
+        items.onNext(1);
+        items.onNext(2);
+        items.onNext(3);
+        items.onNext(4);
+
+        items.filter(item -> item % 2 == 0)
+                .subscribe(System.out::println);
+
+        items.onNext(5);
+        items.onNext(6);
+        items.onNext(7);
+        items.onNext(8);
     }
 }
