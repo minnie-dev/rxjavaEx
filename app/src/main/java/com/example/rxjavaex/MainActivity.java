@@ -37,7 +37,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        deferObservable();
+        try {
+            fromArrayObservable();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
 
     }
@@ -59,10 +63,14 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void fromArrayObservable() {
+    private void fromArrayObservable() throws InterruptedException {
         String[] itemArray = new String[]{"Morning", "Afternoon", "Evening"};
-        Observable<String> source = Observable.fromArray(itemArray);
-        source.subscribe(System.out::println);
+        Observable.fromArray(itemArray)
+                .observeOn(Schedulers.computation())
+                .subscribe(data->{
+                    System.out.println("Observe On : " +Thread.currentThread().getName()+" | "+"value : "+data);
+                });
+        Thread.sleep(100);
     }
 
     private void fromIterableObservable() {
