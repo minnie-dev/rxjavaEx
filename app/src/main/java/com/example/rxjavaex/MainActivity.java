@@ -37,15 +37,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        try {
+        /*try {
             fromArrayObservable();
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
-
+        }*/
+        subscribeOnObserveOn();
 
     }
-
     private void createObservable() {
         Observable<String> source = Observable.create(emitter -> {
             emitter.onNext("Hello");
@@ -281,8 +280,6 @@ public class MainActivity extends AppCompatActivity {
         ).subscribe(System.out::println);
     }
 
-
-
     private void coldObservable() {
         Observable<Long> src = Observable.interval(1, TimeUnit.SECONDS);
         src.subscribe(value -> System.out.println("First: " + value));
@@ -370,5 +367,55 @@ public class MainActivity extends AppCompatActivity {
         items.onNext(6);
         items.onNext(7);
         items.onNext(8);
+    }
+
+
+    private void subscribeOnObserveOn(){
+        ArrayList<MyShape> shapes = new ArrayList<>();
+        shapes.add(new MyShape("Red","Ball"));
+        shapes.add(new MyShape("Green","Ball"));
+        shapes.add(new MyShape("Blue","Ball"));
+
+        Observable.fromIterable(shapes)
+                .subscribeOn(Schedulers.computation())
+                .subscribeOn(Schedulers.io())
+                .doOnSubscribe(data -> MyUtil.printData("doOnSubscribe"))
+                .doOnNext(data -> MyUtil.printData("doOnNext", data))
+                .observeOn(Schedulers.newThread())                  // (C)
+                .map(data -> {data.shape = "Square"; return data;})
+                .doOnNext(data -> MyUtil.printData("map(Square)", data))
+                .observeOn(Schedulers.newThread())                  // (D)
+                .map(data -> {data.shape = "Triangle"; return data;})
+                .doOnNext(data -> MyUtil.printData("map(Triangle)", data))
+                .observeOn(Schedulers.newThread())                  // (E)
+                .subscribe(data -> MyUtil.printData("subscribe", data));
+    }
+
+    class MyShape{
+        String color;
+        String shape;
+
+        MyShape(String color,String shape){
+            this.color = color;
+            this.shape = shape;
+        }
+
+        @Override
+        public String toString() {
+            return "MyShape{" +
+                    "color='" + color + '\'' +
+                    ", shape='" + shape + '\'' +
+                    '}';
+        }
+    }
+
+    static class MyUtil{
+        static void printData(String message) {
+            System.out.println(""+Thread.currentThread().getName()+" | "+message+" | ");
+        }
+
+        static void printData(String message, Object obj) {
+            System.out.println(""+Thread.currentThread().getName()+" | "+message+" | " +obj.toString());
+        }
     }
 }
